@@ -1,4 +1,3 @@
-// File: src/App.js (diperbarui)
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -14,10 +13,12 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
+import LoadingSpinner from './components/LoadingSpinner';
 import './App.css';
 
 function AppContent() {
-  const { currentUser, userRole, loading: authLoading } = useAuth();
+  const { currentUser, userRole, loading: authLoading, error: authError } = useAuth();
+  const { loading: firestoreLoading, error: firestoreError } = useFirestore();
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -28,16 +29,68 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (authLoading || showSplash) {
+  // Tampilkan splash screen selama 3 detik atau sampai loading selesai
+  if (showSplash || authLoading) {
     return <SplashScreen />;
   }
 
+  // Jika ada error, tampilkan error
+  const error = authError || firestoreError;
+
   return (
     <div className="App">
-      <ErrorDisplay />
+      {error && <ErrorDisplay message={error} />}
       {currentUser && <Navigation />}
+      {(authLoading || firestoreLoading) && <LoadingSpinner />}
       <Routes>
-        {/* ... rute lainnya */}
+        <Route 
+          path="/login" 
+          element={!currentUser ? <Login /> : <Navigate to="/dashboard" />} 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/orders" 
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/transactions" 
+          element={
+            <ProtectedRoute>
+              <Transactions />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/reports" 
+          element={
+            <ProtectedRoute requiredRole="owner">
+              <Reports />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <ProtectedRoute requiredRole="owner">
+              <Settings />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/" 
+          element={<Navigate to={currentUser ? "/dashboard" : "/login"} />} 
+        />
       </Routes>
     </div>
   );
