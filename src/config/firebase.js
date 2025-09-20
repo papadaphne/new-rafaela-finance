@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+// Pastikan konfigurasi ini sesuai dengan project Firebase Anda
 const firebaseConfig = {
   apiKey: "AIzaSyC57gZNXlJoGvTKnTCgCfspMC_qPgkLvtU",
   authDomain: "rafaela-finance.firebaseapp.com",
@@ -13,7 +14,14 @@ const firebaseConfig = {
   measurementId: "G-XM0GEZY4PK"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firebase Authentication and get a reference to the service
+const auth = getAuth(app);
+
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
+
+export { auth, db };
 export default app;
