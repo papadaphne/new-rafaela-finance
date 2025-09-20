@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Fungsi pembantu untuk memeriksa apakah pengguna terautentikasi
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Fungsi untuk memeriksa apakah pengguna adalah owner
+    function isOwner() {
+      return request.auth.uid == 'GAfTnHxYwgSoZL4YXvpw889B0Hj2';
+    }
+    
+    // Fungsi untuk mendapatkan peran pengguna
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Aturan untuk koleksi users
+    match /users/{userId} {
+      allow read, write: if isOwner();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Aturan untuk koleksi transactions
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (isOwner() || getUserRole() == 'owner');
+    }
+    
+    // Aturan untuk koleksi categories
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isOwner() || getUserRole() == 'owner');
+    }
+    
+    // Aturan untuk koleksi orders
+    match /orders/{orderId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Blok akses ke semua dokumen lainnya
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
