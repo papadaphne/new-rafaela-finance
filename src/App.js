@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { FirestoreProvider } from './contexts/FirestoreContext';
+import { FirestoreProvider, useFirestore } from './contexts/FirestoreContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ErrorDisplay from './components/ErrorDisplay';
 import SplashScreen from './components/SplashScreen';
@@ -20,26 +20,58 @@ function AppContent() {
   const { currentUser, userRole, loading: authLoading, error: authError } = useAuth();
   const { loading: firestoreLoading, error: firestoreError } = useFirestore();
   const [showSplash, setShowSplash] = useState(true);
+  const [appError, setAppError] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3000);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Tampilkan splash screen selama 3 detik atau sampai loading selesai
+  useEffect(() => {
+    if (authError || firestoreError) {
+      setAppError(authError || firestoreError);
+    }
+  }, [authError, firestoreError]);
+
+  // Tampilkan splash screen selama loading atau selama 2.5 detik
   if (showSplash || authLoading) {
     return <SplashScreen />;
   }
 
-  // Jika ada error, tampilkan error
-  const error = authError || firestoreError;
+  // Tampilkan error jika ada
+  if (appError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="mb-4">{appError}</p>
+          <div className="space-y-2">
+            <button
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={() => window.location.reload()}
+            >
+              Reload Page
+            </button>
+            <button
+              className="w-full bg-gray-600 text-white px-4 py-2 rounded"
+              onClick={() => {
+                setAppError('');
+                window.location.href = '/login';
+              }}
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
-      {error && <ErrorDisplay message={error} />}
       {currentUser && <Navigation />}
       {(authLoading || firestoreLoading) && <LoadingSpinner />}
       <Routes>
