@@ -25,50 +25,79 @@ export function FirestoreProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Load transactions
   useEffect(() => {
-    const q = query(
-      collection(db, 'transactions'),
-      orderBy('date', 'desc')
-    );
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const transactionsData = [];
-      querySnapshot.forEach((doc) => {
-        transactionsData.push({ id: doc.id, ...doc.data() });
-      });
-      setTransactions(transactionsData);
-      setLoading(false);
-    });
+    try {
+      const q = query(
+        collection(db, 'transactions'),
+        orderBy('date', 'desc')
+      );
+      
+      const unsubscribe = onSnapshot(q, 
+        (querySnapshot) => {
+          const transactionsData = [];
+          querySnapshot.forEach((doc) => {
+            transactionsData.push({ id: doc.id, ...doc.data() });
+          });
+          setTransactions(transactionsData);
+          setLoading(false);
+          setError('');
+        },
+        (error) => {
+          console.error('Error loading transactions:', error);
+          setError('Failed to load transactions: ' + error.message);
+          setLoading(false);
+        }
+      );
 
-    return unsubscribe;
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error setting up transactions listener:', error);
+      setError('Failed to setup transactions: ' + error.message);
+      setLoading(false);
+    }
   }, []);
 
   // Load categories
   useEffect(() => {
-    const q = query(collection(db, 'categories'));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const categoriesData = [];
-      querySnapshot.forEach((doc) => {
-        categoriesData.push({ id: doc.id, ...doc.data() });
-      });
-      setCategories(categoriesData);
-    });
+    try {
+      const q = query(collection(db, 'categories'));
+      
+      const unsubscribe = onSnapshot(q, 
+        (querySnapshot) => {
+          const categoriesData = [];
+          querySnapshot.forEach((doc) => {
+            categoriesData.push({ id: doc.id, ...doc.data() });
+          });
+          setCategories(categoriesData);
+          setError('');
+        },
+        (error) => {
+          console.error('Error loading categories:', error);
+          setError('Failed to load categories: ' + error.message);
+        }
+      );
 
-    return unsubscribe;
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error setting up categories listener:', error);
+      setError('Failed to setup categories: ' + error.message);
+    }
   }, []);
 
   // Add transaction
   const addTransaction = async (transactionData) => {
     try {
+      setError('');
       await addDoc(collection(db, 'transactions'), {
         ...transactionData,
         createdAt: Timestamp.now()
       });
     } catch (error) {
       console.error('Error adding transaction: ', error);
+      setError('Failed to add transaction: ' + error.message);
       throw error;
     }
   };
@@ -76,9 +105,11 @@ export function FirestoreProvider({ children }) {
   // Delete transaction
   const deleteTransaction = async (id) => {
     try {
+      setError('');
       await deleteDoc(doc(db, 'transactions', id));
     } catch (error) {
       console.error('Error deleting transaction: ', error);
+      setError('Failed to delete transaction: ' + error.message);
       throw error;
     }
   };
@@ -86,12 +117,14 @@ export function FirestoreProvider({ children }) {
   // Add category
   const addCategory = async (categoryData) => {
     try {
+      setError('');
       await addDoc(collection(db, 'categories'), {
         ...categoryData,
         createdAt: Timestamp.now()
       });
     } catch (error) {
       console.error('Error adding category: ', error);
+      setError('Failed to add category: ' + error.message);
       throw error;
     }
   };
@@ -99,9 +132,11 @@ export function FirestoreProvider({ children }) {
   // Delete category
   const deleteCategory = async (id) => {
     try {
+      setError('');
       await deleteDoc(doc(db, 'categories', id));
     } catch (error) {
       console.error('Error deleting category: ', error);
+      setError('Failed to delete category: ' + error.message);
       throw error;
     }
   };
@@ -129,11 +164,16 @@ export function FirestoreProvider({ children }) {
   
   const netProfit = totalIncome - totalExpense;
 
+  const clearError = () => {
+    setError('');
+  };
+
   const value = {
     transactions,
     categories,
     orders,
     loading,
+    error,
     addTransaction,
     deleteTransaction,
     addCategory,
@@ -144,7 +184,8 @@ export function FirestoreProvider({ children }) {
     grossProfit,
     totalIncome,
     totalExpense,
-    netProfit
+    netProfit,
+    clearError
   };
 
   return (
