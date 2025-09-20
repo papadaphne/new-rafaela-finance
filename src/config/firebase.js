@@ -1,17 +1,16 @@
-// File: src/config/firebase.js
+// File: src/config/firebase.js (diperbarui)
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Pastikan konfigurasi ini sesuai dengan project Firebase Anda
 const firebaseConfig = {
-  apiKey: "AIzaSyC57gZNXlJoGvTKnTCgCfspMC_qPgkLvtU",
-  authDomain: "rafaela-finance.firebaseapp.com",
-  projectId: "rafaela-finance",
-  storageBucket: "rafaela-finance.firebasestorage.app",
-  messagingSenderId: "45081143872",
-  appId: "1:45081143872:web:91d15b2732c24178ee0da5",
-  measurementId: "G-XM0GEZY4PK"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyC57gZNXlJoGvTKnTCgCfspMC_qPgkLvtU",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "rafaela-finance.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "rafaela-finance",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "rafaela-finance.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "45081143872",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:45081143872:web:91d15b2732c24178ee0da5",
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-XM0GEZY4PK"
 };
 
 // Initialize Firebase
