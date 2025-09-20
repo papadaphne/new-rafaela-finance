@@ -1,12 +1,10 @@
-// File: src/contexts/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   signInWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged,
-  signInWithCustomToken
+  onAuthStateChanged 
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext();
@@ -24,43 +22,15 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       setError('');
-      setLoading(true);
-      
-      // Coba login dengan email/password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Set user role berdasarkan UID khusus untuk owner
-      if (user.uid === 'GAfTnHxYwgSoZL4YXvpw889B0Hj2') {
-        setUserRole('owner');
-      } else {
-        // Cek role di Firestore
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserRole(userDoc.data().role);
-        } else {
-          // Jika tidak ada di Firestore, set sebagai employee
-          await setDoc(doc(db, 'users', user.uid), {
-            email: user.email,
-            role: 'employee',
-            createdAt: new Date()
-          });
-          setUserRole('employee');
-        }
-      }
-      
-      setCurrentUser(user);
-      return user;
+      return userCredential;
     } catch (error) {
       setError('Failed to log in: ' + error.message);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = () => {
-    setError('');
     return signOut(auth);
   };
 
@@ -78,7 +48,6 @@ export function AuthProvider({ children }) {
             if (userDoc.exists()) {
               setUserRole(userDoc.data().role);
             } else {
-              // Default to employee if no role found
               setUserRole('employee');
             }
           }
@@ -89,7 +58,7 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
-        setError('Authentication error: ' + error.message);
+        setError('Error in authentication: ' + error.message);
       } finally {
         setLoading(false);
       }
@@ -98,23 +67,18 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const clearError = () => {
-    setError('');
-  };
-
   const value = {
     currentUser,
     userRole,
     login,
     logout,
     error,
-    clearError,
-    loading
+    setError
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
