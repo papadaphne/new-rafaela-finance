@@ -2,7 +2,7 @@
   "name": "rafaela-finance",
   "version": "1.0.0",
   "description": "Aplikasi keuangan untuk Rafaela Finance",
-  "main": "src/index.js",
+  "main": "src/index.jsx",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
