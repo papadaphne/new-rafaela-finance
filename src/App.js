@@ -2,25 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { FirestoreProvider, useFirestore } from './contexts/FirestoreContext';
-import ErrorBoundary from './components/ErrorBoundary';
-import ErrorDisplay from './components/ErrorDisplay';
+import ErrorBoundary from './components/Common/ErrorBoundary';
+import ErrorDisplay from './components/Common/ErrorDisplay';
 import SplashScreen from './components/SplashScreen';
-import Login from './components/Login';
+import Login from './components/Auth/Login';
 import Dashboard from './pages/Dashboard';
 import Orders from './pages/Orders';
 import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import Navigation from './components/Navigation';
-import ProtectedRoute from './components/ProtectedRoute';
-import LoadingSpinner from './components/LoadingSpinner';
-import './App.css';
+import Navigation from './components/Common/Navigation';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+import LoadingSpinner from './components/Common/LoadingSpinner';
+import './styles/App.css';
 
 function AppContent() {
-  const { currentUser, userRole, loading: authLoading, error: authError } = useAuth();
+  const { currentUser, loading: authLoading, error: authError } = useAuth();
   const { loading: firestoreLoading, error: firestoreError } = useFirestore();
   const [showSplash, setShowSplash] = useState(true);
-  const [appError, setAppError] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -30,50 +29,20 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (authError || firestoreError) {
-      setAppError(authError || firestoreError);
-    }
-  }, [authError, firestoreError]);
-
-  // Tampilkan splash screen selama loading atau selama 2.5 detik
+  // Tampilkan splash screen selama loading
   if (showSplash || authLoading) {
     return <SplashScreen />;
   }
 
-  // Tampilkan error jika ada
-  if (appError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="mb-4">{appError}</p>
-          <div className="space-y-2">
-            <button
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded"
-              onClick={() => window.location.reload()}
-            >
-              Reload Page
-            </button>
-            <button
-              className="w-full bg-gray-600 text-white px-4 py-2 rounded"
-              onClick={() => {
-                setAppError('');
-                window.location.href = '/login';
-              }}
-            >
-              Go to Login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  // Tampilkan loading spinner jika firestore masih loading
+  if (firestoreLoading) {
+    return <LoadingSpinner message="Memuat data..." />;
   }
 
   return (
     <div className="App">
+      <ErrorDisplay />
       {currentUser && <Navigation />}
-      {(authLoading || firestoreLoading) && <LoadingSpinner />}
       <Routes>
         <Route 
           path="/login" 
